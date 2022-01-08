@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css';
 import axios from 'axios'
 import { BASEURL } from './helper';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Loader from './Loader';
+import popAudio from './pop.wav'
+import notificationAudio from './notification.wav'
+import errorAudio from './error.wav'
 
 
 
@@ -12,23 +16,30 @@ const [messages, setmessages] = useState([])
 const [currentStage, setCurrentStage] = useState('')
 const [answerText, setAnswerText] = useState('')
 const [stage, setstage] = useState(1)
+const [loading, setloading] = useState(false)
+const [pop] = useState(new Audio(popAudio));
+const [notification] = useState(new Audio(notificationAudio));
+const [errorsound] = useState(new Audio(errorAudio));
 
 
 
-  // useEffect(() => {
-  //   axios.get(`${BASEURL}/stage/${stage}/`).then((response) => {
-  //     let msg = messages;
-  //     msg.push(response.data)
-  //     setmessages(msg)
-  //     console.log(messages) 
-  //   })
-  //   .catch(err=>{
-  //     console.log(err)
-  //   })
-  // }, [])
+const endOfMessages = useRef(null);
 
-  
 
+
+const popPlay = () => {
+  pop.play();
+};
+
+
+const notificationPlay = () => {
+  notification.play();
+};
+
+
+const errorSoundPlay = () => {
+  errorsound.play();
+};
   const endFunction = () =>{
     toast.success('Thank you, This chat session would be refreshed', {
       position: "top-center",
@@ -57,9 +68,13 @@ const [stage, setstage] = useState(1)
 
 
   const createPost = () => {
+    setloading(true)
     if(answerText==""){
+      setloading(false)
       emptybox()
+      errorSoundPlay()
     }else{
+      popPlay()
 
       axios
       .post(`${BASEURL}/stage/${stage}/`, {
@@ -68,6 +83,7 @@ const [stage, setstage] = useState(1)
         from:'user'
       })
       .then((response) => {
+        notificationPlay()
         let msg = messages
         msg.push(
           {
@@ -76,13 +92,16 @@ const [stage, setstage] = useState(1)
             from:'user'
           }
           )
+          setloading(false)
           msg.push(response.data)
           setmessages(msg)
           setstage(response.data.next_stage)
           console.log(messages)
           setAnswerText('')
         console.log(response.data.next_stage)
+        endOfMessages.current.scrollIntoView({ behavior: 'smooth' });
         if(response.data.next_stage=="00"){
+          setloading(false)
           endFunction()
           setTimeout(() => {
             window.location.reload();
@@ -90,10 +109,12 @@ const [stage, setstage] = useState(1)
         }
       })
       .catch(error =>{
+        setloading(false)
         let msg = messages
         msg.push(error.response.data)
         setmessages(msg)
         console.log(messages)
+        endOfMessages.current.scrollIntoView({ behavior: 'smooth' });
       }
       
       )
@@ -146,6 +167,7 @@ pauseOnHover
 
     <div className="d-flex flex-row p-3" key={mess.question_text}>
       <div className="bg-white mr-2 p-3"><span className="text-muted">{mess?.answer_text}</span></div> <img src="https://img.icons8.com/color/48/000000/circled-user-male-skin-type-7.png" width={30} height={30} />
+      <div ref={endOfMessages}> </div>
     </div>
    )
   })
@@ -157,9 +179,9 @@ pauseOnHover
    
     <div className="form-group px-3"> 
       <textarea name='answertext' value={answerText} onChange={(e)=>handleChange(e)} className="form-control mt-3" rows={5} placeholder="Type your message" />
-    <button className="btn btn-primary text-center btn-block mt-4" onClick={createPost} >
-      send
-    </button>
+    <a className={`btn btn-primary text-center btn-block mt-4 text-white ${loading ? 'disabled' : null }`} onClick={createPost} aria-disabled="true" disabled>
+      {loading ? <Loader /> : "send"}
+    </a>
     </div>
   </div>
 </div>
