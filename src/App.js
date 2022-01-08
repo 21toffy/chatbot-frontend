@@ -15,17 +15,17 @@ const [stage, setstage] = useState(1)
 
 
 
-  useEffect(() => {
-    axios.get(`${BASEURL}/stage/${stage}/`).then((response) => {
-      let msg = messages;
-      msg.push(response.data)
-      setmessages(msg)
-      console.log(messages) 
-    })
-    .catch(err=>{
-      console.log(err)
-    })
-  }, [])
+  // useEffect(() => {
+  //   axios.get(`${BASEURL}/stage/${stage}/`).then((response) => {
+  //     let msg = messages;
+  //     msg.push(response.data)
+  //     setmessages(msg)
+  //     console.log(messages) 
+  //   })
+  //   .catch(err=>{
+  //     console.log(err)
+  //   })
+  // }, [])
 
   
 
@@ -124,12 +124,7 @@ pauseOnHover
 
    
     <div className="d-flex flex-row p-3"> <img src="https://img.icons8.com/color/48/000000/circled-user-female-skin-type-7.png" width={30} height={30} />
-      <div className="chat ml-2 p-3">{
-        messages ?
-        messages[0]?.question_text
-        :
-        null
-      }</div>
+      <div className="chat ml-2 p-3">Welcome to Kaduna State University , please type your name below.</div>
     </div>
 
     {
